@@ -1,5 +1,6 @@
 // Rookery Rocks: crack a substitution cipher with the clues detectives and linguists use.
 import { h } from '../ui.js';
+import { play } from '../sfx.js';
 import { ALPHABET, makeKey, encode, invert, frequencies, assign, wrongGuesses, isSolved, nextHint, lettersIn } from '../logic/cipher.js';
 
 function playCipher(message, { give = [] } = {}) {
@@ -27,6 +28,7 @@ function playCipher(message, { give = [] } = {}) {
       const cls = ['cell', selected === c && 'sel', locked.has(c) && 'given', wrongShown.has(c) && 'wrong', g && 'has'].filter(Boolean).join(' ');
       return h('button', {
         class: cls,
+        'data-sfx': 'off',
         'aria-label': `Code letter ${c}${g ? ', you think it is ' + g : ''}`,
         onclick: () => select(c),
       }, h('span', { class: 'cell-guess' }, g || '·'), h('span', { class: 'cell-code' }, c));
@@ -38,6 +40,7 @@ function playCipher(message, { give = [] } = {}) {
       keys.replaceChildren(
         ...ALPHABET.split('').map((L) => h('button', {
           class: `key${used.has(L) ? ' used' : ''}`,
+          'data-sfx': 'off',
           disabled: !selected || locked.has(selected),
           onclick: () => put(L),
         }, L)),
@@ -56,6 +59,7 @@ function playCipher(message, { give = [] } = {}) {
     }
 
     function select(c) {
+      play('pick');
       selected = c;
       paint();
     }
@@ -63,6 +67,7 @@ function playCipher(message, { give = [] } = {}) {
     function put(L) {
       if (over || !selected || locked.has(selected)) return;
       guesses = assign(guesses, selected, L);
+      play('type');
       wrongShown.delete(selected);
       if (isSolved(cipher, guesses, key)) {
         over = true;
@@ -88,21 +93,23 @@ function playCipher(message, { give = [] } = {}) {
     };
     document.addEventListener('keydown', onKey);
 
-    const check = h('button', { class: 'btn' }, 'Check my work');
+    const check = h('button', { class: 'btn', 'data-sfx': 'off' }, 'Check my work');
     check.addEventListener('click', () => {
       checks++;
       const wrong = wrongGuesses(guesses, key);
       wrongShown = new Set(wrong);
+      play(wrong.length ? 'nope' : 'correct');
       paint();
       status.textContent = wrong.length
         ? `${wrong.length} guess${wrong.length > 1 ? 'es are' : ' is'} off (marked in red). Everything else is right!`
         : 'Everything you\'ve guessed so far is right. Keep going!';
     });
-    const clue = h('button', { class: 'btn' }, 'Give me a clue');
+    const clue = h('button', { class: 'btn', 'data-sfx': 'off' }, 'Give me a clue');
     clue.addEventListener('click', () => {
       const hnt = nextHint(cipher, guesses, key);
       if (!hnt) return;
       hints++;
+      play('sparkle');
       selected = hnt.cipher;
       put(hnt.plain);
       if (area.isConnected && !isSolved(cipher, guesses, key)) status.textContent = `Clue: code letter ${hnt.cipher} is really ${hnt.plain}. Clues are tools. Detectives use them too.`;

@@ -2,6 +2,7 @@
 import * as store from './store.js';
 import { COLORS, PIP, MENTORS, TALKBACKS, FOG_LINES } from './content.js';
 import { findEcho } from './logic/stats.js';
+import { play } from './sfx.js';
 
 export function h(tag, props, ...children) {
   const el = document.createElement(tag);
@@ -130,15 +131,17 @@ export function dialogue(container, lines, { doneLabel = 'Got it' } = {}) {
     container.append(wrap, bar);
     let i = 0;
     const finish = () => {
-      while (i < lines.length) show();
+      while (i < lines.length) show(true);
       bar.remove();
       resolve();
     };
-    const show = () => {
+    const show = (silent) => {
       const [who, text] = lines[i++];
+      if (!silent) play(who === 'fog' ? 'fog' : 'pop');
       wrap.append(bubble(who, text));
       if (i >= lines.length) next.textContent = doneLabel;
     };
+    next.dataset.sfx = 'off';
     next.addEventListener('click', () => (i >= lines.length ? finish() : show()));
     skip.addEventListener('click', finish);
     show();
@@ -163,15 +166,20 @@ export function guessWidget(container, spec, question) {
       'aria-describedby': `${id}-q`,
     });
     const faces = ['😬', '😟', '🤔', '🙂', '😎'];
+    let lastV = start;
     const paint = () => {
       const v = Number(input.value);
+      if (v !== lastV) {
+        lastV = v;
+        play('tick');
+      }
       readout.textContent = isCount ? `${v} of ${max}${spec.unit ? ' ' + spec.unit : ''}` : `${v}% sure`;
       face.textContent = faces[Math.min(4, Math.floor((v / max) * 5))];
       input.style.setProperty('--fill', `${(v / max) * 100}%`);
     };
     input.addEventListener('input', paint);
     paint();
-    const go = h('button', { class: 'btn btn-primary' }, 'Lock in my guess');
+    const go = h('button', { class: 'btn btn-primary', 'data-sfx': 'off' }, 'Lock in my guess');
     const card = h('div', { class: 'guess' },
       h('label', { class: 'guess-q', id: `${id}-q`, for: id }, question),
       h('div', { class: 'guess-scale' },
@@ -181,6 +189,7 @@ export function guessWidget(container, spec, question) {
       h('div', { class: 'row row-end' }, go));
     container.append(card);
     go.addEventListener('click', () => {
+      play('lock');
       card.classList.add('locked');
       input.disabled = true;
       go.remove();
@@ -195,12 +204,15 @@ export function talkBack(container) {
     const fogLine = FOG_LINES[Math.floor(Math.random() * FOG_LINES.length)];
     const box = h('div', { class: 'talkback' });
     box.append(bubble('fog', fogLine));
+    setTimeout(() => play('fog'), 250);
     const prompt = h('p', { class: 'talkback-q' }, 'That voice is the Fog. It sounds sure of itself, but it is only guessing. What do you say back?');
     const choices = h('div', { class: 'chips' });
     TALKBACKS.forEach((t) => {
       choices.append(h('button', {
         class: 'chip',
+        'data-sfx': 'off',
         onclick: () => {
+          play('brave');
           store.update((s) => s.talkbacks.push({ text: t, at: Date.now() }));
           choices.remove();
           prompt.remove();
@@ -239,28 +251,9 @@ export async function guessFlow(container, spec, question) {
 
 // ---------- Feedback ----------
 
-let audio;
+// Kept for older call sites: 'feather' for a win, 'soft' for a learning moment.
 export function chime(kind = 'feather') {
-  if (!store.get().settings.sound) return;
-  try {
-    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-    const notes = kind === 'feather' ? [659, 784, 988, 1319] : kind === 'soft' ? [523, 659] : [392, 330];
-    notes.forEach((f, i) => {
-      const o = audio.createOscillator();
-      const g = audio.createGain();
-      o.type = 'triangle';
-      o.frequency.value = f;
-      const t = audio.currentTime + i * 0.09;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.12, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-      o.connect(g).connect(audio.destination);
-      o.start(t);
-      o.stop(t + 0.55);
-    });
-  } catch {
-    // Sound is a bonus.
-  }
+  play(kind === 'soft' ? 'learn' : kind);
 }
 
 export function toast(text) {

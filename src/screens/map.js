@@ -5,6 +5,7 @@ import { ISLANDS, MENTORS } from '../content.js';
 import { levelsFor } from '../feats/index.js';
 import { h, birdFor, featherIcon, reducedMotion, dialogue } from '../ui.js';
 import { doubtStats } from '../logic/stats.js';
+import { play } from '../sfx.js';
 
 export function islandStatus(id) {
   const n = store.featherCount();
@@ -209,6 +210,7 @@ export function renderMap(params, ctx) {
   }
 
   ctx.onLeave(fogLayer(canvas, spots));
+  if (n > lastSeen) setTimeout(() => play('reveal'), 300);
   store.update((st) => (st.seen.mapFeathers = n));
   return root;
 }

@@ -73,6 +73,7 @@ function showResult({ stage, featId, levels, index, level, island, mentor, guess
   const actions = h('div', { class: 'row row-wrap row-end' });
 
   if (level.measureOnly) {
+    chime('measure');
     store.updateFeat(featId, (f) => {
       f.baseline = { score: res.score, max: res.max, guess };
       if (!f.cleared.includes(level.id)) f.cleared.push(level.id);

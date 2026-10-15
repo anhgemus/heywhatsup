@@ -1,6 +1,7 @@
 // Seed Cache Hill: the memory palace.
 import * as store from '../store.js';
 import { h, wait } from '../ui.js';
+import { play } from '../sfx.js';
 import { makeList, makePool, scoreOrdered, sillyScene, LOCI } from '../logic/memory.js';
 
 const SHOW_MS = 5000;
@@ -10,7 +11,7 @@ function showSequence(area, items, { palace, scenes }) {
     const counter = h('p', { class: 'mem-count' });
     const card = h('div', { class: 'mem-card' });
     const timer = h('div', { class: 'mem-timer' }, h('div', { class: 'mem-timer-fill' }));
-    const next = h('button', { class: 'btn' }, 'Next →');
+    const next = h('button', { class: 'btn', 'data-sfx': 'off' }, 'Next →');
     area.replaceChildren(counter, card, timer, h('div', { class: 'row row-end' }, next));
     let i = 0;
     let t;
@@ -21,6 +22,7 @@ function showSequence(area, items, { palace, scenes }) {
         return;
       }
       const item = items[i];
+      play('flip');
       counter.textContent = `${i + 1} / ${items.length}`;
       card.replaceChildren();
       if (palace) {
@@ -51,7 +53,7 @@ function showSequence(area, items, { palace, scenes }) {
 }
 
 function poolButton(item, onPick) {
-  return h('button', { class: 'pool-item', 'aria-label': item.n, onclick: () => onPick(item) },
+  return h('button', { class: 'pool-item', 'aria-label': item.n, 'data-sfx': 'off', onclick: () => { play('pick'); onPick(item); } },
     h('span', { 'aria-hidden': 'true' }, item.e), h('small', null, item.n));
 }
 

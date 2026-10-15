@@ -54,7 +54,7 @@ the mental-math tricks, memory scoring, Fermi unit chains, and the doubt-gap sta
 ```
 index.html, styles.css
 src/
-  main.js, router.js, store.js, ui.js, content.js, challenge.js
+  main.js, router.js, store.js, ui.js, sfx.js, content.js, challenge.js
   logic/     pure game logic (tested)
   feats/     the five islands
   screens/   map, island, wings, Big Sky, campfire, grown-ups, settings

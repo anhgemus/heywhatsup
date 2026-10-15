@@ -118,6 +118,9 @@ button, input, textarea { font: inherit; color: inherit; }
 .nav-btn { background: none; border: 0; padding: 8px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap; color: var(--ink-soft); font-weight: 700; font-size: var(--step--1); }
 .nav-btn:hover { color: var(--ink); background: var(--paper-2); }
 .nav-btn.on { color: var(--ink); background: var(--sun-soft); }
+.sound-btn { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; flex: none; }
+.sound-btn:hover { border-color: var(--ink); }
+.sound-btn.muted { color: var(--ink-soft); border-style: dashed; }
 .feathers-pill { display: flex; align-items: center; gap: 4px; border: 2px solid var(--ink); background: var(--paper); border-radius: 999px; padding: 2px 12px 2px 8px; font-family: var(--mono); font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; }
 @media (max-width: 560px) {
   .topbar-inner { flex-wrap: wrap; gap: 4px 12px; padding-block: 6px; }

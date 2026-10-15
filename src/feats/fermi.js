@@ -1,5 +1,6 @@
 // Far Shore: Fermi estimates. Break an "impossible" question into pieces you can find out.
 import { h } from '../ui.js';
+import { play } from '../sfx.js';
 import { applyCard, formatBig, withinRange } from '../logic/fermi.js';
 
 const CARDS = {
@@ -27,12 +28,13 @@ function measure(area, { what, seconds, howTo, fallback, unitWord }) {
     const id = 'measure-count';
     const input = h('input', { id, class: 'answer', inputmode: 'numeric', autocomplete: 'off' });
     const clock = h('p', { class: 'clock', 'aria-live': 'polite' }, `${seconds}s`);
-    const start = h('button', { class: 'btn btn-primary' }, `Start the ${seconds}-second timer`);
+    const start = h('button', { class: 'btn btn-primary', 'data-sfx': 'off' }, `Start the ${seconds}-second timer`);
     const use = h('button', { class: 'btn', type: 'submit' }, 'Use my count');
     const typical = h('button', { class: 'btn btn-quiet', type: 'button' }, `I can't measure it. Use a typical kid's number (${fallback * (60 / seconds)} ${unitWord} a minute)`);
     let t;
     start.addEventListener('click', () => {
       let left = seconds;
+      play('bell');
       start.disabled = true;
       clock.classList.add('running');
       t = setInterval(() => {
@@ -40,6 +42,7 @@ function measure(area, { what, seconds, howTo, fallback, unitWord }) {
         clock.textContent = left > 0 ? `${left}s` : 'Stop! How many did you count?';
         if (left <= 0) {
           clearInterval(t);
+          play('bell');
           clock.classList.remove('running');
           input.focus();
         }
@@ -89,7 +92,8 @@ function chainBuilder(area, { start, goal, goalLabel, cards, range, finishLabel 
         ...chain.steps.map((c) => h('li', null, `${c.label} (${c.note}) → ${c.resultLabel}`)));
       deck.replaceChildren(...cards.map((c) => h('button', {
         class: 'card-btn',
-        onclick: () => play(c),
+        'data-sfx': 'off',
+        onclick: () => playCard(c),
       }, h('span', { class: 'card-op' }, c.label), h('span', { class: 'card-note' }, c.note))));
       doneRow.replaceChildren();
       if (chain.unit === goal) {
@@ -101,12 +105,14 @@ function chainBuilder(area, { start, goal, goalLabel, cards, range, finishLabel 
       }
     }
 
-    function play(card) {
+    function playCard(card) {
       const r = applyCard(chain, card);
       if (!r.ok) {
+        play('nope');
         msg.textContent = r.message;
         return;
       }
+      play(r.chain.unit === goal ? 'measure' : 'pick');
       history.push(chain);
       chain = r.chain;
       msg.textContent = '';

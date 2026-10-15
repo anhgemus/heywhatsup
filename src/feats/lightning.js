@@ -1,5 +1,6 @@
 // Nectar Falls: mental-math tricks. Speed, the kind of ambition that's easiest to learn.
 import { h } from '../ui.js';
+import { play } from '../sfx.js';
 import { makeRound, checkAnswer, squareFive, timesEleven } from '../logic/lightning.js';
 
 function practice(area, problem) {
@@ -39,13 +40,15 @@ function ask(area, p, i, total, seconds, log) {
       h('p', { class: 'mem-count' }, `${i + 1} / ${total}`),
       h('label', { class: 'big-problem', for: id }, `${p.prompt} =`),
       input, bar,
-      h('div', { class: 'row row-end' }, h('button', { class: 'btn btn-primary', type: 'submit' }, 'Answer')));
+      h('div', { class: 'row row-end' }, h('button', { class: 'btn btn-primary', type: 'submit', 'data-sfx': 'off' }, 'Answer')));
     let done = false;
     const end = (value) => {
       if (done) return;
       done = true;
       clearTimeout(timer);
+      clearInterval(ticker);
       const ok = checkAnswer(p, value);
+      play(ok ? 'correct' : 'miss');
       log.append(h('li', { class: ok ? 'ok' : 'miss' },
         `${p.prompt} = ${p.answer.toLocaleString('en-US')} `,
         ok ? '✓' : h('span', { class: 'why' }, `· ${value ? 'you said ' + value + '. ' : 'time ran out. '}${p.steps[p.steps.length - 1]}`)));
@@ -53,6 +56,11 @@ function ask(area, p, i, total, seconds, log) {
       setTimeout(() => resolve(ok), ok ? 600 : 1600);
     };
     const timer = setTimeout(() => end(input.value.trim()), seconds * 1000);
+    let left = seconds;
+    const ticker = setInterval(() => {
+      left--;
+      if (left > 0 && left <= 3) play('tick');
+    }, 1000);
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       end(input.value.trim());

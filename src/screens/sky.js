@@ -307,7 +307,7 @@ function stepReady(body) {
           obstacle: d.obstacle, ifThen: d.ifThen,
         };
         store.update((s) => { s.plans.unshift(plan); s.skyDraft = null; });
-        chime('soft');
+        chime('takeoff');
         go('flight', { id: plan.id, fresh: true });
       },
     }, 'Take off')));

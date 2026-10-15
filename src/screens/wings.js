@@ -3,6 +3,7 @@ import * as store from '../store.js';
 import { go } from '../router.js';
 import { h, birdFor, featherPath, FEATHER_FILL, featherIcon, pct, compareBars, screenHead } from '../ui.js';
 import { doubtStats } from '../logic/stats.js';
+import { play } from '../sfx.js';
 
 const KIND_NAME = { feat: 'Island feather', sky: 'Big Sky feather', hop: 'Hop feather', stumble: 'Learning feather' };
 const PER_ROW = 9;
@@ -92,6 +93,7 @@ export function renderWings() {
   let picked = null;
   const art = h('div', { class: 'wings-stage' });
   art.append(wingsSVG(feathers, (f, g) => {
+    play('pick');
     picked?.classList.remove('picked');
     picked = g;
     g.classList.add('picked');
@@ -99,6 +101,7 @@ export function renderWings() {
   }));
   art.append(h('div', { class: 'wings-bird', html: birdFor('you', { size: 110 }) }));
   root.append(art, detail);
+  if (feathers.length) setTimeout(() => play('flap'), 150);
 
   const legend = h('ul', { class: 'legend' },
     ...Object.entries(KIND_NAME).map(([k, name]) => h('li', null, h('span', { html: featherIcon(k, 22) }), name)));

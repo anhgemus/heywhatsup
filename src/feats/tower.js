@@ -1,5 +1,6 @@
 // Knot Tree: the Tower of Hanoi, solved by shrinking the problem.
 import { h } from '../ui.js';
+import { play } from '../sfx.js';
 import { createTower, canMove, move, isSolved, minMoves, nextMove, currentGoal } from '../logic/hanoi.js';
 
 const POSTS = ['A', 'B', 'C'];
@@ -18,7 +19,7 @@ function playTower(n) {
     const counter = h('p', { class: 'tower-count' });
 
     const postButtons = POSTS.map((label, i) =>
-      h('button', { class: 'post', 'aria-label': `Post ${label}`, onclick: () => tap(i) }));
+      h('button', { class: 'post', 'aria-label': `Post ${label}`, 'data-sfx': 'off', onclick: () => tap(i) }));
 
     function paint(highlight = []) {
       postButtons.forEach((btn, i) => {
@@ -38,15 +39,21 @@ function playTower(n) {
     function tap(i) {
       if (over) return;
       if (held === null) {
-        if (!pegs[i].length) return say('That post is empty. Pick a post with a ring on it.');
+        if (!pegs[i].length) {
+          play('nope');
+          return say('That post is empty. Pick a post with a ring on it.');
+        }
+        play('pick');
         held = i;
         say(`Picked up ring ${pegs[i][pegs[i].length - 1]}. Now tap where it should go.`);
       } else if (held === i) {
         held = null;
+        play('drop');
         say('Put it back.');
       } else if (canMove(pegs, held, i)) {
         history.push(pegs);
         pegs = move(pegs, held, i);
+        play('drop');
         moves++;
         held = null;
         say('');
@@ -66,6 +73,7 @@ function playTower(n) {
         board.classList.remove('shake');
         void board.offsetWidth;
         board.classList.add('shake');
+        play('nope');
         say("A big ring can't sit on a smaller one. Try another post.");
       }
       paint();
@@ -75,9 +83,10 @@ function playTower(n) {
       status.textContent = t;
     }
 
-    const shrink = h('button', { class: 'btn' }, 'Shrink hint');
+    const shrink = h('button', { class: 'btn', 'data-sfx': 'off' }, 'Shrink hint');
     shrink.addEventListener('click', () => {
       hints++;
+      play('sparkle');
       const g = currentGoal(pegs, n);
       if (!g) return;
       held = null;
@@ -86,9 +95,10 @@ function playTower(n) {
         : `Ring 1 just needs to hop to post ${POSTS[g.to]}.`;
       paint();
     });
-    const peek = h('button', { class: 'btn' }, 'Show next move');
+    const peek = h('button', { class: 'btn', 'data-sfx': 'off' }, 'Show next move');
     peek.addEventListener('click', () => {
       hints++;
+      play('sparkle');
       const m = nextMove(pegs, n);
       if (!m) return;
       held = null;
